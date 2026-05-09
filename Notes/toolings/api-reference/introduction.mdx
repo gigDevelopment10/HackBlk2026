@@ -1,0 +1,178 @@
+---
+title: 'API Introduction'
+description: 'Complete API reference for AI Workforce platform'
+---
+
+# AI Workforce API
+
+The AI Workforce API provides comprehensive access to all platform features, including agent management, pack creation, task execution, and monitoring. This RESTful API enables you to integrate AI agents seamlessly into your applications and workflows.
+
+## Base URL
+
+```
+https://api.aiworkforce.com/v1
+```
+
+## Authentication
+
+All API requests require authentication using Bearer tokens. Include your API key in the Authorization header:
+
+```bash
+Authorization: Bearer your_api_key_here
+```
+
+### Getting Your API Key
+
+1. Sign in to your [AI Workforce dashboard](https://dashboard.aiworkforce.com)
+2. Navigate to **Settings** → **API Keys**
+3. Click **Generate New Key**
+4. Copy and securely store your API key
+
+### Security Best Practices
+
+- Never expose your API key in client-side code
+- Use environment variables to store API keys
+- Implement proper access controls and monitoring
+- Rotate API keys regularly
+
+## Rate Limits
+
+API requests are rate-limited to ensure fair usage:
+
+| Plan | Requests per Minute | Requests per Hour | Requests per Day |
+|------|-------------------|------------------|------------------|
+| Starter | 60 | 1,000 | 10,000 |
+| Professional | 300 | 5,000 | 50,000 |
+| Enterprise | 1,000 | 20,000 | 200,000 |
+
+Rate limit headers are included in every response:
+
+```bash
+X-RateLimit-Limit: 300
+X-RateLimit-Remaining: 299
+X-RateLimit-Reset: 1640995200
+```
+
+## API Versions
+
+The current API version is `v1`. Version information is included in the response headers:
+
+```bash
+API-Version: 1.0
+```
+
+## Response Format
+
+All API responses follow a consistent JSON format:
+
+### Success Response
+```json
+{
+  "success": true,
+  "data": {
+    // Response data
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "requestId": "req_123456789",
+    "version": "1.0"
+  }
+}
+```
+
+### Error Response
+```json
+{
+  "success": false,
+  "error": {
+    "code": "INVALID_REQUEST",
+    "message": "Invalid request parameters",
+    "details": {
+      "field": "teamId",
+      "reason": "Required field missing"
+    }
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "requestId": "req_123456789",
+    "version": "1.0"
+  }
+}
+```
+
+## HTTP Status Codes
+
+| Code | Meaning | Description |
+|------|---------|-------------|
+| 200 | OK | Request successful |
+| 201 | Created | Resource created successfully |
+| 400 | Bad Request | Invalid request parameters |
+| 401 | Unauthorized | Invalid or missing API key |
+| 403 | Forbidden | Insufficient permissions |
+| 404 | Not Found | Resource not found |
+| 409 | Conflict | Resource conflict |
+| 422 | Unprocessable Entity | Validation failed |
+| 429 | Too Many Requests | Rate limit exceeded |
+| 500 | Internal Server Error | Server error |
+
+## SDK Libraries
+
+We provide official SDK libraries for popular programming languages:
+
+<CardGroup cols={2}>
+  <Card title="TypeScript/JavaScript" icon="code">
+    npm install @aiworkforce/sdk
+  </Card>
+  <Card title="Python" icon="code">
+    pip install aiworkforce
+  </Card>
+  <Card title="Go" icon="code">
+    go get github.com/aiworkforce/go-sdk
+  </Card>
+  <Card title="Java" icon="code">
+    Coming soon
+  </Card>
+</CardGroup>
+
+## Webhooks
+
+Receive real-time notifications about events in your AI Workforce:
+
+```bash
+POST /webhooks
+{
+  "url": "https://your-app.com/webhook",
+  "events": ["task.completed", "task.failed"],
+  "secret": "whsec_your_secret"
+}
+```
+
+## OpenAPI Specification
+
+You can access our complete OpenAPI specification for integration with API documentation tools:
+
+<Card
+  title="Download OpenAPI Spec"
+  icon="file-code"
+  href="https://api.aiworkforce.com/openapi.json"
+>
+  Download the complete OpenAPI 3.0 specification
+</Card>
+
+## Getting Started
+
+1. **Get your API key** from the dashboard
+2. **Choose your integration method**: REST API, SDK, or webhooks
+3. **Test with our endpoints** using the examples below
+4. **Deploy your integration** to production
+
+## Support
+
+- **API Documentation**: Complete reference below
+- **SDK Examples**: Available in our GitHub repository
+- **Community**: Join our [Discord server](https://discord.gg/aiworkforce)
+- **Support**: Contact api-support@aiworkforce.com
+
+<Note>
+  **Pro Tip**: Start with our quickstart examples to understand the API flow before building complex integrations.
+</Note>

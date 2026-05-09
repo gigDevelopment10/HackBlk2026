@@ -1,0 +1,440 @@
+---
+title: 'Agents API'
+description: 'Manage and interact with AI agents'
+---
+
+# Agents API
+
+The Agents API allows you to browse, configure, and manage individual AI agents available in the marketplace.
+
+## List Agents
+
+Retrieve a paginated list of available agents with filtering options.
+
+```http
+GET /agents
+```
+
+### Query Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| category | string | No | Filter by agent category (advisory, marketing, technology, etc.) |
+| skill | string | No | Filter by specific skill |
+| rating | number | No | Minimum rating (1-5) |
+| page | integer | No | Page number (default: 1) |
+| limit | integer | No | Items per page (default: 20, max: 100) |
+| sort | string | No | Sort by (name, rating, usage, created) |
+| order | string | No | Sort order (asc, desc) |
+
+### Example Request
+
+```bash
+curl "https://api.aiworkforce.com/v1/agents?category=marketing&rating=4&page=1&limit=10" \
+  -H "Authorization: Bearer your_api_key_here"
+```
+
+### Example Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "agents": [
+      {
+        "id": "content-strategist",
+        "name": "Content Strategist",
+        "description": "Specializes in content planning and SEO optimization",
+        "category": "marketing",
+        "rating": 4.8,
+        "usageCount": 15234,
+        "pricing": {
+          "model": "pay-per-query",
+          "cost": 0.015
+        },
+        "capabilities": [
+          "content-planning",
+          "seo-optimization",
+          "keyword-research",
+          "content-calendar"
+        ],
+        "integrations": [
+          "google-analytics",
+          "semrush",
+          "wordpress"
+        ],
+        "createdAt": "2024-01-10T00:00:00Z",
+        "updatedAt": "2024-01-15T10:30:00Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 45,
+      "totalPages": 5
+    }
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "requestId": "req_123456789",
+    "version": "1.0"
+  }
+}
+```
+
+## Get Agent Details
+
+Retrieve detailed information about a specific agent.
+
+```http
+GET /agents/{agentId}
+```
+
+### Path Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| agentId | string | Yes | Unique identifier of the agent |
+
+### Example Request
+
+```bash
+curl "https://api.aiworkforce.com/v1/agents/content-strategist" \
+  -H "Authorization: Bearer your_api_key_here"
+```
+
+### Example Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "content-strategist",
+    "name": "Content Strategist",
+    "description": "Advanced AI agent for content strategy and SEO optimization",
+    "category": "marketing",
+    "subcategory": "content-planning",
+    "rating": 4.8,
+    "usageCount": 15234,
+    "pricing": {
+      "model": "pay-per-query",
+      "cost": 0.015,
+      "currency": "USD"
+    },
+    "capabilities": [
+      {
+        "name": "content-planning",
+        "description": "Create comprehensive content strategies",
+        "proficiency": 0.95
+      },
+      {
+        "name": "seo-optimization",
+        "description": "Optimize content for search engines",
+        "proficiency": 0.92
+      },
+      {
+        "name": "keyword-research",
+        "description": "Research and analyze keywords",
+        "proficiency": 0.88
+      },
+      {
+        "name": "content-calendar",
+        "description": "Generate content calendars",
+        "proficiency": 0.90
+      }
+    ],
+    "integrations": [
+      {
+        "name": "google-analytics",
+        "type": "analytics",
+        "required": false,
+        "description": "Access website analytics data"
+      },
+      {
+        "name": "semrush",
+        "type": "seo-tools",
+        "required": false,
+        "description": "Advanced SEO analysis tools"
+      },
+      {
+        "name": "wordpress",
+        "type": "cms",
+        "required": false,
+        "description": "Publish content to WordPress"
+      }
+    ],
+    "configuration": {
+      "defaultPersonality": "professional",
+      "supportedLanguages": ["en", "es", "fr", "de"],
+      "maxResponseLength": 2000,
+      "supportedFormats": ["markdown", "html", "json"]
+    },
+    "performance": {
+      "averageResponseTime": 2.3,
+      "successRate": 0.98,
+      "userSatisfaction": 0.94
+    },
+    "createdAt": "2024-01-10T00:00:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "requestId": "req_123456789",
+    "version": "1.0"
+  }
+}
+```
+
+## Test Agent
+
+Test an agent with sample input before adding it to a pack.
+
+```http
+POST /agents/{agentId}/test
+```
+
+### Request Body
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| input | object | Yes | Test input for the agent |
+| configuration | object | No | Override default configuration |
+| tools | array | No | Enable specific tools for testing |
+
+### Example Request
+
+```bash
+curl -X POST "https://api.aiworkforce.com/v1/agents/content-strategist/test" \
+  -H "Authorization: Bearer your_api_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "input": {
+      "query": "Create a content strategy for a new SaaS product",
+      "targetAudience": "B2B software companies",
+      "goals": ["lead-generation", "brand-awareness"]
+    },
+    "configuration": {
+      "personality": "creative",
+      "responseLength": "detailed"
+    },
+    "tools": ["google-analytics", "semrush"]
+  }'
+```
+
+### Example Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "testId": "test_abc123",
+    "result": {
+      "response": "Here's a comprehensive content strategy for your SaaS product...",
+      "confidence": 0.92,
+      "reasoning": "Analyzed target audience and competitive landscape"
+    },
+    "performance": {
+      "responseTime": 2.1,
+      "tokensUsed": 450,
+      "cost": 0.00675
+    },
+    "metadata": {
+      "toolsUsed": ["keyword-research", "competitor-analysis"],
+      "capabilitiesUsed": ["content-planning", "seo-optimization"]
+    }
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "requestId": "req_123456789",
+    "version": "1.0"
+  }
+}
+```
+
+## Get Agent Categories
+
+Retrieve all available agent categories.
+
+```http
+GET /agents/categories
+```
+
+### Example Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "categories": [
+      {
+        "id": "advisory",
+        "name": "Advisory",
+        "description": "Strategic insights and market research",
+        "agentCount": 12,
+        "subcategories": [
+          {
+            "id": "market-research",
+            "name": "Market Research",
+            "agentCount": 5
+          },
+          {
+            "id": "strategic-advisory",
+            "name": "Strategic Advisory",
+            "agentCount": 7
+          }
+        ]
+      },
+      {
+        "id": "marketing",
+        "name": "Marketing",
+        "description": "Content creation and campaign management",
+        "agentCount": 18,
+        "subcategories": [
+          {
+            "id": "content-creation",
+            "name": "Content Creation",
+            "agentCount": 8
+          },
+          {
+            "id": "campaign-management",
+            "name": "Campaign Management",
+            "agentCount": 6
+          },
+          {
+            "id": "social-media",
+            "name": "Social Media",
+            "agentCount": 4
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "requestId": "req_123456789",
+    "version": "1.0"
+  }
+}
+```
+
+## Get Agent Skills
+
+Retrieve all available agent skills.
+
+```http
+GET /agents/skills
+```
+
+### Example Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "skills": [
+      {
+        "id": "content-planning",
+        "name": "Content Planning",
+        "description": "Create comprehensive content strategies",
+        "category": "marketing",
+        "proficiencyRequired": 0.8,
+        "agentCount": 8
+      },
+      {
+        "id": "data-analysis",
+        "name": "Data Analysis",
+        "description": "Analyze and interpret complex datasets",
+        "category": "technology",
+        "proficiencyRequired": 0.85,
+        "agentCount": 12
+      }
+    ]
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "requestId": "req_123456789",
+    "version": "1.0"
+  }
+}
+```
+
+## Search Agents
+
+Search for agents using natural language queries.
+
+```http
+POST /agents/search
+```
+
+### Request Body
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| query | string | Yes | Natural language search query |
+| filters | object | No | Additional filters |
+| limit | integer | No | Maximum results (default: 20) |
+
+### Example Request
+
+```bash
+curl -X POST "https://api.aiworkforce.com/v1/agents/search" \
+  -H "Authorization: Bearer your_api_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "AI agent for financial modeling and risk assessment",
+    "filters": {
+      "category": "finance",
+      "rating": 4.5
+    },
+    "limit": 10
+  }'
+```
+
+### Example Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "agents": [
+      {
+        "id": "financial-modeler",
+        "name": "Financial Modeler",
+        "description": "Specializes in financial modeling and risk assessment",
+        "category": "finance",
+        "rating": 4.9,
+        "relevanceScore": 0.95,
+        "matchReasons": [
+          "Financial modeling expertise",
+          "Risk assessment capabilities",
+          "High user rating"
+        ]
+      }
+    ],
+    "searchMetadata": {
+      "query": "AI agent for financial modeling and risk assessment",
+      "totalResults": 3,
+      "searchTime": 0.045
+    }
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "requestId": "req_123456789",
+    "version": "1.0"
+  }
+}
+```
+
+## Error Codes
+
+| Code | Description | Resolution |
+|------|-------------|------------|
+| AGENT_NOT_FOUND | Agent with specified ID not found | Verify agent ID is correct |
+| INVALID_CATEGORY | Invalid category filter | Use valid category from /agents/categories |
+| TEST_FAILED | Agent test execution failed | Check test input and configuration |
+| RATE_LIMIT_EXCEEDED | API rate limit exceeded | Wait before making another request |
+| INVALID_QUERY | Invalid search query | Provide valid search parameters |
+
+<Note>
+  **Pro Tip**: Use the test endpoint to evaluate agent performance before committing to a paid plan or integration.
+</Note>

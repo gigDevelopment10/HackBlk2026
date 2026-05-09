@@ -1,0 +1,135 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "maple",
+  "name": "AI Workforce",
+  "colors": {
+    "primary": "#2563EB",
+    "light": "#3B82F6",
+    "dark": "#1D4ED8"
+  },
+  "favicon": "/favicon.svg",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Getting Started",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "index",
+              "quickstart",
+              "architecture"
+            ]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "marketplace",
+              "knowledge-feeding",
+              "pack-builder",
+              "configuration",
+              "deployment"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Core APIs",
+            "pages": [
+              "api-reference/introduction",
+              "api-reference/agents",
+              "api-reference/packs",
+              "api-reference/knowledge"
+            ]
+          },
+          {
+            "group": "Integration APIs",
+            "pages": [
+              "api-reference/teams",
+              "api-reference/webhooks",
+              "api-reference/sdk"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Integration",
+            "pages": [
+              "guides/rest-api",
+              "guides/sdk-integration",
+              "guides/webhooks"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "guides/security",
+              "guides/monitoring",
+              "guides/troubleshooting"
+            ]
+          }
+        ]
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "AI Workforce Platform",
+          "href": "https://aiworkforce.com",
+          "icon": "robot"
+        },
+        {
+          "anchor": "Support",
+          "href": "mailto:support@aiworkforce.com",
+          "icon": "life-buoy"
+        }
+      ]
+    }
+  },
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Documentation",
+        "href": "https://docs.aiworkforce.com"
+      },
+      {
+        "label": "Support",
+        "href": "mailto:support@aiworkforce.com"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Get Started",
+      "href": "/quickstart"
+    }
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "mcp",
+      "cursor",
+      "vscode"
+    ]
+  },
+  "footer": {
+    "socials": {
+      "x": "https://x.com/aiworkforce",
+      "github": "https://github.com/aiworkforce",
+      "linkedin": "https://linkedin.com/company/aiworkforce"
+    }
+  }
+}

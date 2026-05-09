@@ -1,0 +1,596 @@
+---
+title: 'Knowledge API'
+description: 'Manage knowledge sources and feeding systems'
+---
+
+# Knowledge API
+
+The Knowledge API enables you to manage knowledge sources, feed organization-specific data, and query the knowledge base for AI agent context.
+
+## Create Knowledge Source
+
+Create a new knowledge source for feeding data to AI agents.
+
+```http
+POST /knowledge/sources
+```
+
+### Request Body
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| name | string | Yes | Name of the knowledge source |
+| type | string | Yes | Source type (web-scraping, file-upload, documentation, knowledge-base) |
+| config | object | Yes | Source-specific configuration |
+| processing | object | No | Processing options |
+| schedule | object | No | Update schedule |
+| metadata | object | No | Additional metadata |
+
+### Example Request
+
+```bash
+curl -X POST "https://api.aiworkforce.com/v1/knowledge/sources" \
+  -H "Authorization: Bearer your_api_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Company Documentation",
+    "type": "documentation",
+    "config": {
+      "platform": "confluence",
+      "url": "https://your-company.atlassian.net/wiki",
+      "credentials": {
+        "username": "api-user",
+        "token": "confluence-api-token"
+      },
+      "spaces": ["HR", "ENG", "PRODUCT"],
+      "filters": {
+        "includeArchived": false,
+        "dateRange": "last-90-days"
+      }
+    },
+    "processing": {
+      "extractImages": true,
+      "extractTables": true,
+      "extractMetadata": true,
+      "ocrEnabled": true
+    },
+    "schedule": {
+      "type": "cron",
+      "expression": "0 2 * * *",
+      "timezone": "America/New_York"
+    },
+    "metadata": {
+      "department": "all",
+      "priority": "high",
+      "tags": ["internal", "documentation"]
+    }
+  }'
+```
+
+### Example Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "sourceId": "src_abc123",
+    "name": "Company Documentation",
+    "type": "documentation",
+    "status": "created",
+    "config": {
+      "platform": "confluence",
+      "spaces": ["HR", "ENG", "PRODUCT"]
+    },
+    "processing": {
+      "extractImages": true,
+      "extractTables": true,
+      "extractMetadata": true,
+      "ocrEnabled": true
+    },
+    "schedule": {
+      "type": "cron",
+      "expression": "0 2 * * *",
+      "timezone": "America/New_York",
+      "nextRun": "2024-01-16T02:00:00Z"
+    },
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "requestId": "req_123456789",
+    "version": "1.0"
+  }
+}
+```
+
+## List Knowledge Sources
+
+Retrieve all knowledge sources with filtering options.
+
+```http
+GET /knowledge/sources
+```
+
+### Query Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| type | string | No | Filter by source type |
+| status | string | No | Filter by status (active, inactive, error) |
+| page | integer | No | Page number (default: 1) |
+| limit | integer | No | Items per page (default: 20) |
+
+### Example Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "sources": [
+      {
+        "sourceId": "src_abc123",
+        "name": "Company Documentation",
+        "type": "documentation",
+        "status": "active",
+        "documentCount": 1250,
+        "lastProcessed": "2024-01-15T02:00:00Z",
+        "nextProcess": "2024-01-16T02:00:00Z",
+        "createdAt": "2024-01-10T10:30:00Z"
+      },
+      {
+        "sourceId": "src_def456",
+        "name": "Customer Support FAQs",
+        "type": "file-upload",
+        "status": "active",
+        "documentCount": 85,
+        "lastProcessed": "2024-01-14T15:30:00Z",
+        "nextProcess": null,
+        "createdAt": "2024-01-12T14:20:00Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 20,
+      "total": 5,
+      "totalPages": 1
+    }
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "requestId": "req_123456789",
+    "version": "1.0"
+  }
+}
+```
+
+## Get Knowledge Source Details
+
+Retrieve detailed information about a specific knowledge source.
+
+```http
+GET /knowledge/sources/{sourceId}
+```
+
+### Example Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "sourceId": "src_abc123",
+    "name": "Company Documentation",
+    "type": "documentation",
+    "status": "active",
+    "config": {
+      "platform": "confluence",
+      "url": "https://your-company.atlassian.net/wiki",
+      "spaces": ["HR", "ENG", "PRODUCT"],
+      "filters": {
+        "includeArchived": false,
+        "dateRange": "last-90-days"
+      }
+    },
+    "processing": {
+      "extractImages": true,
+      "extractTables": true,
+      "extractMetadata": true,
+      "ocrEnabled": true,
+      "chunking": {
+        "strategy": "semantic",
+        "maxChunkSize": 1000,
+        "overlap": 100
+      }
+    },
+    "statistics": {
+      "totalDocuments": 1250,
+      "processedDocuments": 1248,
+      "failedDocuments": 2,
+      "totalChunks": 8750,
+      "vectorSize": "2.3GB",
+      "lastProcessed": "2024-01-15T02:00:00Z",
+      "processingTime": "45m 32s"
+    },
+    "health": {
+      "status": "healthy",
+      "lastError": null,
+      "consecutiveFailures": 0,
+      "averageProcessingTime": "42m 15s"
+    },
+    "schedule": {
+      "type": "cron",
+      "expression": "0 2 * * *",
+      "timezone": "America/New_York",
+      "nextRun": "2024-01-16T02:00:00Z",
+      "lastRun": "2024-01-15T02:00:00Z"
+    },
+    "createdAt": "2024-01-10T10:30:00Z",
+    "updatedAt": "2024-01-15T02:00:00Z"
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "requestId": "req_123456789",
+    "version": "1.0"
+  }
+}
+```
+
+## Update Knowledge Source
+
+Update configuration of an existing knowledge source.
+
+```http
+PUT /knowledge/sources/{sourceId}
+```
+
+### Example Request
+
+```bash
+curl -X PUT "https://api.aiworkforce.com/v1/knowledge/sources/src_abc123" \
+  -H "Authorization: Bearer your_api_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "schedule": {
+      "expression": "0 3 * * *",
+      "timezone": "America/New_York"
+    },
+    "processing": {
+      "chunking": {
+        "maxChunkSize": 800,
+        "overlap": 80
+      }
+    }
+  }'
+```
+
+## Process Knowledge Source
+
+Manually trigger processing of a knowledge source.
+
+```http
+POST /knowledge/sources/{sourceId}/process
+```
+
+### Request Body
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| force | boolean | No | Force reprocessing of all documents |
+| filters | object | No | Apply specific filters for this run |
+
+### Example Request
+
+```bash
+curl -X POST "https://api.aiworkforce.com/v1/knowledge/sources/src_abc123/process" \
+  -H "Authorization: Bearer your_api_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "force": false,
+    "filters": {
+      "spaces": ["HR"],
+      "dateRange": "last-7-days"
+    }
+  }'
+```
+
+### Example Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "processId": "proc_xyz789",
+    "sourceId": "src_abc123",
+    "status": "started",
+    "estimatedDuration": "45m",
+    "documentsToProcess": 125,
+    "startedAt": "2024-01-15T10:30:00Z"
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "requestId": "req_123456789",
+    "version": "1.0"
+  }
+}
+```
+
+## Get Processing Status
+
+Check the status of a knowledge source processing job.
+
+```http
+GET /knowledge/sources/{sourceId}/process/{processId}
+```
+
+### Example Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "processId": "proc_xyz789",
+    "sourceId": "src_abc123",
+    "status": "processing",
+    "progress": {
+      "totalDocuments": 125,
+      "processedDocuments": 87,
+      "failedDocuments": 2,
+      "percentage": 69.6
+    },
+    "currentStage": "vectorization",
+    "estimatedCompletion": "2024-01-15T11:15:00Z",
+    "startedAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:45:00Z",
+    "errors": [
+      {
+        "documentId": "doc_123",
+        "error": "PDF parsing failed",
+        "timestamp": "2024-01-15T10:35:00Z"
+      }
+    ]
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:45:00Z",
+    "requestId": "req_123456789",
+    "version": "1.0"
+  }
+}
+```
+
+## Query Knowledge Base
+
+Search the knowledge base for relevant information.
+
+```http
+POST /knowledge/query
+```
+
+### Request Body
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| query | string | Yes | Search query |
+| filters | object | No | Filter results |
+| limit | integer | No | Maximum results (default: 10) |
+| threshold | number | No | Similarity threshold (default: 0.7) |
+
+### Example Request
+
+```bash
+curl -X POST "https://api.aiworkforce.com/v1/knowledge/query" \
+  -H "Authorization: Bearer your_api_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "What is the company vacation policy?",
+    "filters": {
+      "sourceIds": ["src_abc123"],
+      "categories": ["hr-policy"],
+      "dateRange": {
+        "start": "2024-01-01",
+        "end": "2024-01-15"
+      }
+    },
+    "limit": 5,
+    "threshold": 0.75
+  }'
+```
+
+### Example Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "results": [
+      {
+        "chunkId": "chunk_123",
+        "sourceId": "src_abc123",
+        "documentId": "doc_456",
+        "title": "Employee Handbook - Vacation Policy",
+        "content": "Employees are entitled to 15 days of paid vacation per year...",
+        "similarity": 0.92,
+        "metadata": {
+          "source": "Employee Handbook",
+          "page": 42,
+          "category": "hr-policy",
+          "lastUpdated": "2024-01-10T00:00:00Z"
+        }
+      },
+      {
+        "chunkId": "chunk_124",
+        "sourceId": "src_abc123",
+        "documentId": "doc_457",
+        "title": "HR Policy Updates - Vacation Accrual",
+        "content": "Vacation days accrue monthly at a rate of 1.25 days per month...",
+        "similarity": 0.88,
+        "metadata": {
+          "source": "HR Policy Updates",
+          "page": 15,
+          "category": "hr-policy",
+          "lastUpdated": "2024-01-12T00:00:00Z"
+        }
+      }
+    ],
+    "queryMetadata": {
+      "query": "What is the company vacation policy?",
+      "totalResults": 2,
+      "searchTime": 0.045,
+      "threshold": 0.75
+    }
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "requestId": "req_123456789",
+    "version": "1.0"
+  }
+}
+```
+
+## Upload Documents
+
+Upload documents directly to a knowledge source.
+
+```http
+POST /knowledge/sources/{sourceId}/upload
+```
+
+### Request Body (multipart/form-data)
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| files | file | Yes | Document files to upload |
+| metadata | string | No | JSON metadata for documents |
+
+### Example Request
+
+```bash
+curl -X POST "https://api.aiworkforce.com/v1/knowledge/sources/src_abc123/upload" \
+  -H "Authorization: Bearer your_api_key_here" \
+  -F "files=@document1.pdf" \
+  -F "files=@document2.docx" \
+  -F 'metadata={"category":"policy","department":"HR"}'
+```
+
+### Example Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "uploadId": "upload_def456",
+    "sourceId": "src_abc123",
+    "uploadedFiles": [
+      {
+        "fileId": "file_123",
+        "filename": "document1.pdf",
+        "size": 2048576,
+        "type": "application/pdf",
+        "status": "uploaded"
+      },
+      {
+        "fileId": "file_124",
+        "filename": "document2.docx",
+        "size": 1024000,
+        "type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "status": "uploaded"
+      }
+    ],
+    "processingScheduled": true,
+    "estimatedProcessingTime": "5m"
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "requestId": "req_123456789",
+    "version": "1.0"
+  }
+}
+```
+
+## Delete Knowledge Source
+
+Delete a knowledge source and all associated data.
+
+```http
+DELETE /knowledge/sources/{sourceId}
+```
+
+### Example Request
+
+```bash
+curl -X DELETE "https://api.aiworkforce.com/v1/knowledge/sources/src_abc123" \
+  -H "Authorization: Bearer your_api_key_here"
+```
+
+## Get Knowledge Statistics
+
+Retrieve overall knowledge base statistics.
+
+```http
+GET /knowledge/statistics
+```
+
+### Query Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| timeframe | string | No | Time range for statistics (1d, 7d, 30d) |
+
+### Example Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "timeframe": "7d",
+    "overview": {
+      "totalSources": 5,
+      "activeSources": 4,
+      "totalDocuments": 3247,
+      "processedDocuments": 3225,
+      "totalChunks": 18750,
+      "vectorSize": "5.2GB"
+    },
+    "processing": {
+      "documentsProcessed": 125,
+      "averageProcessingTime": "38m 45s",
+      "successRate": 0.98,
+      "errors": 2
+    },
+    "usage": {
+      "totalQueries": 1847,
+      "averageQueryTime": 0.045,
+      "averageSimilarity": 0.82,
+      "cacheHitRate": 0.73
+    },
+    "sources": [
+      {
+        "sourceId": "src_abc123",
+        "name": "Company Documentation",
+        "documentCount": 1250,
+        "queryCount": 847,
+        "averageSimilarity": 0.85
+      }
+    ]
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "requestId": "req_123456789",
+    "version": "1.0"
+  }
+}
+```
+
+## Error Codes
+
+| Code | Description | Resolution |
+|------|-------------|------------|
+| SOURCE_NOT_FOUND | Knowledge source not found | Verify source ID is correct |
+| INVALID_SOURCE_TYPE | Invalid source type specified | Use valid source type |
+| PROCESSING_FAILED | Document processing failed | Check document format and size |
+| UPLOAD_FAILED | File upload failed | Check file size and format |
+| QUERY_FAILED | Knowledge query failed | Check query parameters |
+| INSUFFICIENT_PERMISSIONS | Insufficient permissions | Check user permissions |
+
+<Note>
+  **Pro Tip**: Use semantic chunking for better knowledge retrieval and set appropriate similarity thresholds to balance precision and recall.
+</Note>

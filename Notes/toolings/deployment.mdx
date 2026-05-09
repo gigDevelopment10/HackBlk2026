@@ -1,0 +1,886 @@
+---
+title: "Deployment"
+description: "Deploy AI agents through multiple integration methods"
+icon: 'rocket'
+---
+
+# Deployment Methods
+
+AI Workforce offers flexible deployment options to integrate AI agents seamlessly into your existing workflows and systems. Choose the method that best fits your technical requirements and operational needs.
+
+## Integration Overview
+
+```mermaid
+graph TB
+    A[AI Workforce Platform] --> B[REST API]
+    A --> C[SDK Libraries]
+    A --> D[Webhook System]
+    A --> E[Streaming API]
+    
+    B --> F[Direct HTTP Access]
+    C --> G[Native Integration]
+    D --> H[Event-Driven]
+    E --> I[Real-time Processing]
+    
+    subgraph "Client Applications"
+        J[Web Applications]
+        K[Mobile Apps]
+        L[Backend Services]
+        M[Third-party Tools]
+    end
+    
+    F --> J
+    G --> K
+    H --> L
+    I --> M
+```
+
+## REST API Integration
+
+### Direct HTTP Access
+Simple, straightforward integration using standard HTTP requests.
+
+```javascript
+// Basic API client setup
+const AIWorkforceAPI = {
+  baseURL: 'https://api.aiworkforce.com/v1',
+  apiKey: process.env.AIWORKFORCE_API_KEY,
+  
+  async request(endpoint, options = {}) {
+    const url = `${this.baseURL}${endpoint}`;
+    const config = {
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json',
+        ...options.headers
+      },
+      ...options
+    };
+    
+    const response = await fetch(url, config);
+    return response.json();
+  },
+  
+  // Execute agent team task
+  async runTeam(teamId, input) {
+    return this.request(`/teams/run`, {
+      method: 'POST',
+      body: JSON.stringify({ teamId, input })
+    });
+  },
+  
+  // Get execution status
+  async getStatus(executionId) {
+    return this.request(`/executions/${executionId}/status`);
+  }
+};
+```
+
+### API Endpoints
+
+#### Core Operations
+```bash
+# Create agent pack
+POST /api/v1/packs
+{
+  "name": "Customer Support Team",
+  "agents": ["support-agent", "escalation-manager"],
+  "configuration": {...}
+}
+
+# Deploy pack
+POST /api/v1/packs/{packId}/deploy
+{
+  "environment": "production",
+  "scaling": {
+    "minInstances": 2,
+    "maxInstances": 10
+  }
+}
+
+# Execute task
+POST /api/v1/teams/run
+{
+  "teamId": "team_123",
+  "input": {
+    "message": "Customer inquiry about order status",
+    "context": {...}
+  },
+  "options": {
+    "priority": "high",
+    "timeout": 300
+  }
+}
+```
+
+#### Streaming Responses
+```javascript
+// Server-sent events for real-time updates
+const eventSource = new EventSource(
+  'https://api.aiworkforce.com/v1/teams/stream',
+  {
+    headers: {
+      'Authorization': `Bearer ${apiKey}`
+    }
+  }
+);
+
+eventSource.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  console.log('Agent update:', data);
+  
+  switch(data.type) {
+    case 'progress':
+      updateProgressBar(data.progress);
+      break;
+    case 'result':
+      displayResult(data.result);
+      break;
+    case 'error':
+      handleError(data.error);
+      break;
+  }
+};
+```
+
+### Error Handling
+```javascript
+class AIWorkforceError extends Error {
+  constructor(message, code, details) {
+    super(message);
+    this.code = code;
+    this.details = details;
+  }
+}
+
+async function handleAPIResponse(response) {
+  if (!response.ok) {
+    const error = await response.json();
+    throw new AIWorkforceError(
+      error.message,
+      error.code,
+      error.details
+    );
+  }
+  return response.json();
+}
+
+// Usage with retry logic
+async function executeWithRetry(teamId, input, maxRetries = 3) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await AIWorkforceAPI.runTeam(teamId, input);
+    } catch (error) {
+      if (attempt === maxRetries || !isRetryableError(error)) {
+        throw error;
+      }
+      await delay(Math.pow(2, attempt) * 1000); // Exponential backoff
+    }
+  }
+}
+```
+
+## SDK Integration
+
+### Supported Languages
+Native libraries for popular programming languages.
+
+#### TypeScript/JavaScript SDK
+```typescript
+import { AIWorkforce } from '@aiworkforce/sdk';
+
+const workforce = new AIWorkforce({
+  apiKey: process.env.AIWORKFORCE_API_KEY,
+  environment: 'production',
+  timeout: 30000
+});
+
+// Create and deploy agent pack
+const customerServicePack = await workforce.packs.create({
+  name: 'Customer Service Team',
+  agents: [
+    {
+      id: 'customer-support-specialist',
+      configuration: {
+        personality: 'friendly',
+        autonomy: 70
+      }
+    }
+  ],
+  skills: ['ticket-analysis', 'customer-communication']
+});
+
+await workforce.packs.deploy(customerServicePack.id);
+
+// Execute with TypeScript support
+type CustomerInquiry = {
+  customerId: string;
+  orderId?: string;
+  message: string;
+  priority: 'low' | 'medium' | 'high';
+};
+
+const result = await workforce.teams.run<CustomerInquiry>(customerServicePack.id, {
+  customerId: 'cust_123',
+  message: 'Where is my order?',
+  priority: 'medium'
+});
+```
+
+#### Python SDK
+```python
+from aiworkforce import AIWorkforce
+from aiworkforce.types import PackConfiguration, TaskInput
+
+# Initialize client
+workforce = AIWorkforce(
+    api_key=os.environ.get('AIWORKFORCE_API_KEY'),
+    environment='production'
+)
+
+# Create pack with configuration
+pack_config = PackConfiguration(
+    name="Data Analysis Team",
+    agents=["data-analyst", "report-writer"],
+    skills=["data-processing", "visualization"],
+    tools=["pandas", "matplotlib", "sql"]
+)
+
+pack = workforce.packs.create(pack_config)
+workforce.packs.deploy(pack.id)
+
+# Execute with async support
+async def analyze_data(dataset_url: str):
+    task_input = TaskInput(
+        dataset_url=dataset_url,
+        analysis_type="comprehensive",
+        output_format="json"
+    )
+    
+    execution = await workforce.teams.run_async(pack.id, task_input)
+    return await execution.result()
+```
+
+#### Go SDK
+```go
+package main
+
+import (
+    "context"
+    "log"
+    
+    "github.com/aiworkforce/go-sdk"
+)
+
+func main() {
+    client := aiworkforce.NewClient(&aiworkforce.Config{
+        APIKey:     os.Getenv("AIWORKFORCE_API_KEY"),
+        Environment: "production",
+    })
+    
+    pack := &aiworkforce.Pack{
+        Name: "Security Analysis Team",
+        Agents: []string{"security-analyst", "vulnerability-scanner"},
+        Configuration: map[string]interface{}{
+            "autonomy": 80,
+            "intelligence": 8,
+        },
+    }
+    
+    createdPack, err := client.Packs.Create(context.Background(), pack)
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    err = client.Packs.Deploy(context.Background(), createdPack.ID)
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    result, err := client.Teams.Run(context.Background(), createdPack.ID, map[string]interface{}{
+        "target": "web-application",
+        "scan_type": "comprehensive",
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    fmt.Printf("Analysis result: %+v\n", result)
+}
+```
+
+### SDK Features
+
+#### Authentication Management
+```typescript
+// Automatic token refresh
+const workforce = new AIWorkforce({
+  apiKey: process.env.AIWORKFORCE_API_KEY,
+  autoRefresh: true,
+  tokenRefreshBuffer: 300 // 5 minutes before expiry
+});
+
+// Multi-tenant support
+const tenantClient = workforce.forTenant('tenant_123');
+```
+
+#### Connection Pooling
+```python
+# Configure connection pool
+workforce = AIWorkforce(
+    api_key=api_key,
+    pool_size=10,
+    max_retries=3,
+    backoff_factor=2
+)
+
+# Async connection management
+async with workforce.async_client() as client:
+    result = await client.teams.run(pack_id, input_data)
+```
+
+#### Type Safety
+```go
+// Generated types from OpenAPI spec
+type TaskInput struct {
+    CustomerID string `json:"customerId"`
+    Message    string `json:"message"`
+    Priority   string `json:"priority"`
+}
+
+func ProcessInquiry(input *TaskInput) (*TaskResult, error) {
+    return client.Teams.Run(packID, input)
+}
+```
+
+## Webhook Integration
+
+### Event-Driven Architecture
+Trigger AI agent tasks based on external events.
+
+```javascript
+// Express.js webhook handler
+app.post('/webhook/ai-workforce', async (req, res) => {
+  const { event, data } = req.body;
+  
+  try {
+    switch(event) {
+      case 'customer.inquiry':
+        await handleCustomerInquiry(data);
+        break;
+      case 'order.created':
+        await handleOrderCreation(data);
+        break;
+      case 'support.ticket':
+        await handleSupportTicket(data);
+        break;
+      default:
+        console.log('Unknown event:', event);
+    }
+    
+    res.status(200).json({ status: 'processed' });
+  } catch (error) {
+    console.error('Webhook processing error:', error);
+    res.status(500).json({ error: 'Processing failed' });
+  }
+});
+
+async function handleCustomerInquiry(data) {
+  const response = await workforce.teams.run('customer-service-team', {
+    customerId: data.customerId,
+    message: data.message,
+    channel: data.channel,
+    priority: data.priority
+  });
+  
+  // Send response back to customer
+  await sendCustomerResponse(data.customerId, response);
+}
+```
+
+### Webhook Configuration
+
+#### Setting Up Webhooks
+```bash
+# Register webhook endpoint
+curl -X POST "https://api.aiworkforce.com/v1/webhooks" \
+  -H "Authorization: Bearer $AIWORKFORCE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://your-app.com/webhook/ai-workforce",
+    "events": ["task.completed", "task.failed", "agent.handoff"],
+    "secret": "whsec_your_webhook_secret",
+    "active": true
+  }'
+```
+
+#### Webhook Security
+```javascript
+// Verify webhook signature
+const crypto = require('crypto');
+
+function verifyWebhookSignature(payload, signature, secret) {
+  const expectedSignature = crypto
+    .createHmac('sha256', secret)
+    .update(payload)
+    .digest('hex');
+  
+  return crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(expectedSignature)
+  );
+}
+
+app.post('/webhook/ai-workforce', (req, res) => {
+  const signature = req.headers['x-aiworkforce-signature'];
+  const payload = JSON.stringify(req.body);
+  
+  if (!verifyWebhookSignature(payload, signature, process.env.WEBHOOK_SECRET)) {
+    return res.status(401).json({ error: 'Invalid signature' });
+  }
+  
+  // Process webhook...
+});
+```
+
+#### Event Types
+```javascript
+const webhookEvents = {
+  'task.started': {
+    description: 'Task execution has begun',
+    data: ['taskId', 'teamId', 'timestamp', 'input']
+  },
+  'task.completed': {
+    description: 'Task completed successfully',
+    data: ['taskId', 'teamId', 'result', 'duration', 'cost']
+  },
+  'task.failed': {
+    description: 'Task execution failed',
+    data: ['taskId', 'teamId', 'error', 'retryCount']
+  },
+  'agent.handoff': {
+    description: 'Agent handed off task to another agent',
+    data: ['taskId', 'fromAgent', 'toAgent', 'reason']
+  },
+  'team.escalated': {
+    description: 'Team escalated task to human',
+    data: ['taskId', 'teamId', 'escalationReason', 'assignedTo']
+  }
+};
+```
+
+## Third-Party Integrations
+
+### Slack Integration
+```javascript
+// Slack bot for AI Workforce
+const { App } = require('@slack/bolt');
+
+const app = new App({
+  token: process.env.SLACK_BOT_TOKEN,
+  signingSecret: process.env.SLACK_SIGNING_SECRET
+});
+
+app.message('/ai-analyze', async ({ message, say }) => {
+  try {
+    // Acknowledge immediately
+    await say('Analyzing your request...');
+    
+    // Run AI analysis
+    const result = await workforce.teams.run('analysis-team', {
+      query: message.text.replace('/ai-analyze', '').trim(),
+      userId: message.user,
+      channel: message.channel
+    });
+    
+    // Send formatted response
+    await say({
+      blocks: [
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `*Analysis Results:*\n${result.summary}`
+          }
+        },
+        {
+          type: 'actions',
+          elements: [
+            {
+              type: 'button',
+              text: { type: 'plain_text', text: 'View Details' },
+              url: result.detailsUrl
+            }
+          ]
+        }
+      ]
+    });
+  } catch (error) {
+    await say(`Sorry, I encountered an error: ${error.message}`);
+  }
+});
+```
+
+### Zapier Integration
+```javascript
+// Zapier webhook triggers
+app.post('/zapier/trigger', async (req, res) => {
+  const { trigger, data } = req.body;
+  
+  switch(trigger) {
+    case 'new_customer_inquiry':
+      const response = await workforce.teams.run('customer-service', {
+        customerEmail: data.email,
+        inquiry: data.message,
+        source: 'zapier'
+      });
+      
+      res.json({
+        response: response.message,
+        suggestedActions: response.actions,
+        escalationNeeded: response.escalation
+      });
+      break;
+      
+    case 'document_analysis':
+      const analysis = await workforce.teams.run('document-team', {
+        documentUrl: data.document_url,
+        analysisType: data.type
+      });
+      
+      res.json({
+        summary: analysis.summary,
+        keyPoints: analysis.keyPoints,
+        recommendations: analysis.recommendations
+      });
+      break;
+  }
+});
+```
+
+### Microsoft Teams Integration
+```javascript
+// Teams bot integration
+const { BotFrameworkAdapter } = require('botbuilder');
+
+const adapter = new BotFrameworkAdapter({
+  appId: process.env.TEAMS_APP_ID,
+  appPassword: process.env.TEAMS_APP_PASSWORD
+});
+
+adapter.onTurn(async (context, next) => {
+  if (context.activity.type === 'message') {
+    const text = context.activity.text;
+    
+    if (text.startsWith('/ai')) {
+      const query = text.replace('/ai', '').trim();
+      
+      const result = await workforce.teams.run('general-assistant', {
+        query: query,
+        userId: context.activity.from.id,
+        channel: 'teams'
+      });
+      
+      await context.sendActivity({
+        type: 'message',
+        text: result.response,
+        attachments: result.attachments
+      });
+    }
+  }
+  
+  await next();
+});
+```
+
+## Deployment Patterns
+
+### Microservices Integration
+```yaml
+# Docker Compose configuration
+version: '3.8'
+services:
+  your-app:
+    image: your-app:latest
+    environment:
+      - AIWORKFORCE_API_KEY=${AIWORKFORCE_API_KEY}
+      - AIWORKFORCE_ENVIRONMENT=production
+    depends_on:
+      - redis
+      - postgres
+  
+  ai-workforce-adapter:
+    image: aiworkforce/adapter:latest
+    environment:
+      - API_KEY=${AIWORKFORCE_API_KEY}
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://user:pass@postgres:5432/db
+    ports:
+      - "8080:8080"
+  
+  redis:
+    image: redis:alpine
+    
+  postgres:
+    image: postgres:13
+```
+
+### Serverless Integration
+```typescript
+// AWS Lambda function
+import { AIWorkforce } from '@aiworkforce/sdk';
+
+const workforce = new AIWorkforce({
+  apiKey: process.env.AIWORKFORCE_API_KEY
+});
+
+export const handler = async (event) => {
+  const { query, userId } = JSON.parse(event.body);
+  
+  try {
+    const result = await workforce.teams.run('lambda-team', {
+      query,
+      userId,
+      source: 'aws-lambda'
+    });
+    
+    return {
+      statusCode: 200,
+      body: JSON.stringify(result)
+    };
+  } catch (error) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: error.message })
+    };
+  }
+};
+```
+
+### Kubernetes Deployment
+```yaml
+# Kubernetes deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-workforce-integration
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ai-workforce-integration
+  template:
+    metadata:
+      labels:
+        app: ai-workforce-integration
+    spec:
+      containers:
+      - name: integration
+        image: your-org/ai-workforce-integration:latest
+        env:
+        - name: AIWORKFORCE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ai-workforce-secrets
+              key: api-key
+        - name: AIWORKFORCE_ENVIRONMENT
+          value: "production"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+```
+
+## Monitoring and Observability
+
+### Health Checks
+```javascript
+// Health check endpoint
+app.get('/health', async (req, res) => {
+  const health = {
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    services: {
+      aiworkforce: await checkAIWorkforceHealth(),
+      database: await checkDatabaseHealth(),
+      cache: await checkCacheHealth()
+    }
+  };
+  
+  res.status(200).json(health);
+});
+
+async function checkAIWorkforceHealth() {
+  try {
+    await workforce.health.check();
+    return { status: 'healthy', latency: Date.now() - start };
+  } catch (error) {
+    return { status: 'unhealthy', error: error.message };
+  }
+}
+```
+
+### Metrics Collection
+```javascript
+// Prometheus metrics
+const prometheus = require('prom-client');
+
+const requestCounter = new prometheus.Counter({
+  name: 'aiworkforce_requests_total',
+  help: 'Total number of AI Workforce requests',
+  labelNames: ['team', 'status']
+});
+
+const requestDuration = new prometheus.Histogram({
+  name: 'aiworkforce_request_duration_seconds',
+  help: 'Duration of AI Workforce requests',
+  labelNames: ['team'],
+  buckets: [0.1, 0.5, 1, 2, 5, 10]
+});
+
+// Middleware for metrics collection
+app.use((req, res, next) => {
+  const start = Date.now();
+  
+  res.on('finish', () => {
+    const duration = (Date.now() - start) / 1000;
+    requestDuration.labels(req.team).observe(duration);
+    requestCounter.labels(req.team, res.statusCode).inc();
+  });
+  
+  next();
+});
+```
+
+### Logging and Tracing
+```typescript
+// Structured logging with tracing
+import { logger } from './logger';
+import { trace } from '@opentelemetry/api';
+
+export async function executeWithTracing(teamId: string, input: any) {
+  const tracer = trace.getTracer('ai-workforce-integration');
+  const span = tracer.startSpan('ai-workforce-execution');
+  
+  try {
+    logger.info('Starting AI Workforce execution', {
+      teamId,
+      input: sanitizeInput(input),
+      traceId: span.spanContext().traceId
+    });
+    
+    const result = await workforce.teams.run(teamId, input);
+    
+    logger.info('AI Workforce execution completed', {
+      teamId,
+      result: sanitizeResult(result),
+      traceId: span.spanContext().traceId
+    });
+    
+    return result;
+  } catch (error) {
+    logger.error('AI Workforce execution failed', {
+      teamId,
+      error: error.message,
+      traceId: span.spanContext().traceId
+    });
+    throw error;
+  } finally {
+    span.end();
+  }
+}
+```
+
+## Best Practices
+
+### Configuration Management
+```typescript
+// Environment-specific configuration
+const config = {
+  development: {
+    apiKey: process.env.DEV_AIWORKFORCE_API_KEY,
+    environment: 'development',
+    timeout: 30000,
+    retryAttempts: 3
+  },
+  staging: {
+    apiKey: process.env.STAGING_AIWORKFORCE_API_KEY,
+    environment: 'staging',
+    timeout: 60000,
+    retryAttempts: 5
+  },
+  production: {
+    apiKey: process.env.AIWORKFORCE_API_KEY,
+    environment: 'production',
+    timeout: 120000,
+    retryAttempts: 10
+  }
+};
+```
+
+### Error Handling and Resilience
+```typescript
+// Circuit breaker pattern
+class CircuitBreaker {
+  constructor(threshold = 5, timeout = 60000) {
+    this.threshold = threshold;
+    this.timeout = timeout;
+    this.failureCount = 0;
+    this.lastFailureTime = null;
+    this.state = 'CLOSED'; // CLOSED, OPEN, HALF_OPEN
+  }
+  
+  async execute(operation) {
+    if (this.state === 'OPEN') {
+      if (Date.now() - this.lastFailureTime > this.timeout) {
+        this.state = 'HALF_OPEN';
+      } else {
+        throw new Error('Circuit breaker is OPEN');
+      }
+    }
+    
+    try {
+      const result = await operation();
+      this.onSuccess();
+      return result;
+    } catch (error) {
+      this.onFailure();
+      throw error;
+    }
+  }
+  
+  onSuccess() {
+    this.failureCount = 0;
+    this.state = 'CLOSED';
+  }
+  
+  onFailure() {
+    this.failureCount++;
+    this.lastFailureTime = Date.now();
+    
+    if (this.failureCount >= this.threshold) {
+      this.state = 'OPEN';
+    }
+  }
+}
+
+// Usage
+const circuitBreaker = new CircuitBreaker();
+
+const result = await circuitBreaker.execute(async () => {
+  return workforce.teams.run(teamId, input);
+});
+```
+
+<Note>
+  **Pro Tip**: Start with a simple REST API integration and gradually adopt more advanced patterns like webhooks and streaming as your requirements evolve.
+</Note>

@@ -1,0 +1,135 @@
+---
+title: "Quickstart"
+description: "Get your AI workforce deployed in minutes"
+icon: 'rocket'
+---
+
+# Quickstart Guide
+
+Deploy your first AI agent team in three simple steps.
+
+## Step 1: Get Your API Key
+
+Sign up for an AI Workforce account and get your API key from the [dashboard](https://dashboard.aiworkforce.com).
+
+```bash
+# Set your API key as an environment variable
+export AIWORKFORCE_API_KEY="your_api_key_here"
+```
+
+## Step 2: Choose Your Agents
+
+Browse the marketplace and select agents for your team. Here's a common setup:
+
+```javascript
+import { AIWorkforce } from '@aiworkforce/sdk';
+
+const workforce = new AIWorkforce({
+  apiKey: process.env.AIWORKFORCE_API_KEY,
+});
+
+// Create a customer service team
+const customerServiceTeam = await workforce.createPack({
+  name: 'Customer Support Team',
+  agents: [
+    'customer-support-specialist',
+    'technical-triage-agent',
+    'escalation-manager'
+  ],
+  skills: ['ticket-analysis', 'knowledge-base-search', 'escalation-routing'],
+  configuration: {
+    autonomy: 70, // 70% autonomous decision making
+    intelligence: 7, // Advanced reasoning
+    costCeiling: 50 // $50 per interaction max
+  }
+});
+```
+
+## Step 3: Deploy and Test
+
+Deploy your team and test it with a sample request:
+
+```javascript
+// Deploy the team
+await workforce.deploy(customerServiceTeam.id);
+
+// Test with a sample customer inquiry
+const response = await workforce.run(customerServiceTeam.id, {
+  message: 'My order #12345 is delayed. Can you help?',
+  context: {
+    customerId: 'cust_789',
+    orderId: 'order_12345'
+  }
+});
+
+console.log(response);
+```
+
+## Example: Marketing Team
+
+Here's how to set up a marketing content team:
+
+```javascript
+const marketingTeam = await workforce.createPack({
+  name: 'Content Marketing Team',
+  agents: [
+    'content-strategist',
+    'copywriter',
+    'seo-analyst',
+    'social-media-manager'
+  ],
+  tools: [
+    'google-search-api',
+    'analytics-integration',
+    'content-calendar'
+  ],
+  memory: {
+    type: 'shared',
+    retention: '30d'
+  },
+  behavior: {
+    personality: 'professional',
+    responseStyle: 'detailed'
+  }
+});
+```
+
+## Integration Options
+
+### REST API
+```bash
+curl -X POST "https://api.aiworkforce.com/v1/teams/run" \
+  -H "Authorization: Bearer $AIWORKFORCE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "teamId": "team_abc123",
+    "input": {
+      "message": "Analyze this customer feedback",
+      "data": {...}
+    }
+  }'
+```
+
+### Webhook Integration
+```javascript
+// Set up webhook endpoint
+app.post('/webhook/ai-workforce', async (req, res) => {
+  const { teamId, input } = req.body;
+  
+  const result = await workforce.run(teamId, input);
+  res.json(result);
+});
+```
+
+## Next Steps
+
+- Explore the [Agent Marketplace](/marketplace) to discover specialized agents
+- Learn about [Knowledge Feeding](/knowledge-feeding) to customize your agents
+- Check the [API Reference](/api-reference/introduction) for detailed documentation
+- Set up [Monitoring & Analytics](/guides/monitoring) to track performance
+
+## Need Help?
+
+- Join our [Discord community](https://discord.gg/aiworkforce)
+- Email us at support@aiworkforce.com
+- Check our [troubleshooting guide](/guides/troubleshooting)

@@ -1,0 +1,615 @@
+---
+title: 'Packs API'
+description: 'Manage agent packs and configurations'
+---
+
+# Packs API
+
+The Packs API enables you to create, configure, and manage agent packs - coordinated teams of AI agents that work together on complex tasks.
+
+## Create Pack
+
+Create a new agent pack with specified agents, skills, and configuration.
+
+```http
+POST /packs
+```
+
+### Request Body
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| name | string | Yes | Name of the agent pack |
+| description | string | No | Description of the pack's purpose |
+| agents | array | Yes | List of agent IDs and configurations |
+| skills | array | No | List of skills for the pack |
+| tools | array | No | List of tools to integrate |
+| memory | object | No | Memory configuration |
+| behavior | object | No | Behavior and personality settings |
+| deployment | object | No | Deployment configuration |
+
+### Example Request
+
+```bash
+curl -X POST "https://api.aiworkforce.com/v1/packs" \
+  -H "Authorization: Bearer your_api_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Customer Service Team",
+    "description": "Handles customer inquiries and support tickets",
+    "agents": [
+      {
+        "id": "customer-support-specialist",
+        "role": "Primary Handler",
+        "priority": 1,
+        "configuration": {
+          "personality": "friendly",
+          "autonomy": 70
+        }
+      },
+      {
+        "id": "technical-triage-agent",
+        "role": "Technical Support",
+        "priority": 2,
+        "configuration": {
+          "personality": "professional",
+          "autonomy": 60
+        }
+      }
+    ],
+    "skills": ["ticket-analysis", "customer-communication", "troubleshooting"],
+    "tools": ["zendesk-integration", "knowledge-base"],
+    "memory": {
+      "type": "shared",
+      "retention": "7d"
+    },
+    "behavior": {
+      "coordination": "sequential",
+      "handoffCriteria": ["technical-issue", "escalation-required"]
+    },
+    "deployment": {
+      "environment": "production",
+      "scaling": {
+        "minInstances": 2,
+        "maxInstances": 10
+      }
+    }
+  }'
+```
+
+### Example Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "packId": "pack_abc123",
+    "name": "Customer Service Team",
+    "description": "Handles customer inquiries and support tickets",
+    "status": "created",
+    "agents": [
+      {
+        "id": "customer-support-specialist",
+        "role": "Primary Handler",
+        "priority": 1,
+        "status": "configured"
+      },
+      {
+        "id": "technical-triage-agent",
+        "role": "Technical Support",
+        "priority": 2,
+        "status": "configured"
+      }
+    ],
+    "skills": ["ticket-analysis", "customer-communication", "troubleshooting"],
+    "tools": ["zendesk-integration", "knowledge-base"],
+    "memory": {
+      "type": "shared",
+      "retention": "7d",
+      "allocated": "100MB"
+    },
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "requestId": "req_123456789",
+    "version": "1.0"
+  }
+}
+```
+
+## List Packs
+
+Retrieve all packs for your organization with filtering options.
+
+```http
+GET /packs
+```
+
+### Query Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| status | string | No | Filter by status (created, deployed, paused, archived) |
+| agent | string | No | Filter by agent ID |
+| page | integer | No | Page number (default: 1) |
+| limit | integer | No | Items per page (default: 20) |
+| sort | string | No | Sort by (name, created, updated) |
+| order | string | No | Sort order (asc, desc) |
+
+### Example Request
+
+```bash
+curl "https://api.aiworkforce.com/v1/packs?status=deployed&page=1&limit=10" \
+  -H "Authorization: Bearer your_api_key_here"
+```
+
+### Example Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "packs": [
+      {
+        "packId": "pack_abc123",
+        "name": "Customer Service Team",
+        "description": "Handles customer inquiries and support tickets",
+        "status": "deployed",
+        "agentCount": 2,
+        "skillCount": 3,
+        "performance": {
+          "totalExecutions": 1250,
+          "successRate": 0.96,
+          "averageResponseTime": 45.2
+        },
+        "createdAt": "2024-01-15T10:30:00Z",
+        "updatedAt": "2024-01-15T10:30:00Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 15,
+      "totalPages": 2
+    }
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "requestId": "req_123456789",
+    "version": "1.0"
+  }
+}
+```
+
+## Get Pack Details
+
+Retrieve detailed information about a specific pack.
+
+```http
+GET /packs/{packId}
+```
+
+### Example Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "packId": "pack_abc123",
+    "name": "Customer Service Team",
+    "description": "Handles customer inquiries and support tickets",
+    "status": "deployed",
+    "agents": [
+      {
+        "id": "customer-support-specialist",
+        "role": "Primary Handler",
+        "priority": 1,
+        "configuration": {
+          "personality": "friendly",
+          "autonomy": 70,
+          "intelligence": 6
+        },
+        "performance": {
+          "executions": 850,
+          "successRate": 0.97,
+          "averageResponseTime": 32.1
+        }
+      },
+      {
+        "id": "technical-triage-agent",
+        "role": "Technical Support",
+        "priority": 2,
+        "configuration": {
+          "personality": "professional",
+          "autonomy": 60,
+          "intelligence": 7
+        },
+        "performance": {
+          "executions": 400,
+          "successRate": 0.94,
+          "averageResponseTime": 58.7
+        }
+      }
+    ],
+    "skills": [
+      {
+        "name": "ticket-analysis",
+        "proficiency": 0.92,
+        "usage": "high"
+      },
+      {
+        "name": "customer-communication",
+        "proficiency": 0.88,
+        "usage": "high"
+      },
+      {
+        "name": "troubleshooting",
+        "proficiency": 0.85,
+        "usage": "medium"
+      }
+    ],
+    "tools": [
+      {
+        "name": "zendesk-integration",
+        "status": "connected",
+        "lastUsed": "2024-01-15T09:45:00Z"
+      },
+      {
+        "name": "knowledge-base",
+        "status": "connected",
+        "lastUsed": "2024-01-15T10:15:00Z"
+      }
+    ],
+    "memory": {
+      "type": "shared",
+      "retention": "7d",
+      "allocated": "100MB",
+      "used": "45MB"
+    },
+    "behavior": {
+      "coordination": "sequential",
+      "handoffCriteria": ["technical-issue", "escalation-required"],
+      "personality": "friendly-professional"
+    },
+    "deployment": {
+      "environment": "production",
+      "instances": 3,
+      "scaling": {
+        "minInstances": 2,
+        "maxInstances": 10,
+        "currentLoad": 0.65
+      }
+    },
+    "performance": {
+      "totalExecutions": 1250,
+      "successRate": 0.96,
+      "averageResponseTime": 45.2,
+      "costPerExecution": 0.085,
+      "totalCost": 106.25
+    },
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "requestId": "req_123456789",
+    "version": "1.0"
+  }
+}
+```
+
+## Update Pack
+
+Update configuration of an existing pack.
+
+```http
+PUT /packs/{packId}
+```
+
+### Example Request
+
+```bash
+curl -X PUT "https://api.aiworkforce.com/v1/packs/pack_abc123" \
+  -H "Authorization: Bearer your_api_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Enhanced Customer Service Team",
+    "agents": [
+      {
+        "id": "customer-support-specialist",
+        "configuration": {
+          "autonomy": 75,
+          "intelligence": 7
+        }
+      }
+    ],
+    "deployment": {
+      "scaling": {
+        "minInstances": 3,
+        "maxInstances": 15
+      }
+    }
+  }'
+```
+
+## Deploy Pack
+
+Deploy a pack to make it active for task execution.
+
+```http
+POST /packs/{packId}/deploy
+```
+
+### Request Body
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| environment | string | Yes | Deployment environment (staging, production) |
+| scaling | object | No | Scaling configuration |
+| rollback | boolean | No | Enable automatic rollback on failure |
+
+### Example Request
+
+```bash
+curl -X POST "https://api.aiworkforce.com/v1/packs/pack_abc123/deploy" \
+  -H "Authorization: Bearer your_api_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "environment": "production",
+    "scaling": {
+      "minInstances": 2,
+      "maxInstances": 10,
+      "targetCpuUtilization": 70
+    },
+    "rollback": true
+  }'
+```
+
+### Example Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "deploymentId": "deploy_xyz789",
+    "packId": "pack_abc123",
+    "environment": "production",
+    "status": "deploying",
+    "instances": [
+      {
+        "instanceId": "inst_123",
+        "status": "starting",
+        "region": "us-east-1"
+      },
+      {
+        "instanceId": "inst_124",
+        "status": "starting",
+        "region": "us-west-2"
+      }
+    ],
+    "estimatedCompletion": "2024-01-15T10:35:00Z",
+    "healthChecks": [
+      "/health",
+      "/ready",
+      "/metrics"
+    ]
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "requestId": "req_123456789",
+    "version": "1.0"
+  }
+}
+```
+
+## Pause Pack
+
+Pause a pack to stop task execution while preserving configuration.
+
+```http
+POST /packs/{packId}/pause
+```
+
+### Example Request
+
+```bash
+curl -X POST "https://api.aiworkforce.com/v1/packs/pack_abc123/pause" \
+  -H "Authorization: Bearer your_api_key_here"
+```
+
+## Resume Pack
+
+Resume a paused pack to enable task execution.
+
+```http
+POST /packs/{packId}/resume
+```
+
+### Example Request
+
+```bash
+curl -X POST "https://api.aiworkforce.com/v1/packs/pack_abc123/resume" \
+  -H "Authorization: Bearer your_api_key_here"
+```
+
+## Delete Pack
+
+Delete a pack permanently. This action cannot be undone.
+
+```http
+DELETE /packs/{packId}
+```
+
+### Example Request
+
+```bash
+curl -X DELETE "https://api.aiworkforce.com/v1/packs/pack_abc123" \
+  -H "Authorization: Bearer your_api_key_here"
+```
+
+## Get Pack Metrics
+
+Retrieve performance metrics for a pack.
+
+```http
+GET /packs/{packId}/metrics
+```
+
+### Query Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| timeframe | string | No | Time range (1h, 24h, 7d, 30d) |
+| granularity | string | No | Data granularity (minute, hour, day) |
+
+### Example Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "timeframe": "7d",
+    "granularity": "hour",
+    "metrics": {
+      "executions": {
+        "total": 1250,
+        "successful": 1200,
+        "failed": 50,
+        "successRate": 0.96
+      },
+      "performance": {
+        "averageResponseTime": 45.2,
+        "medianResponseTime": 42.1,
+        "p95ResponseTime": 78.3,
+        "p99ResponseTime": 120.5
+      },
+      "cost": {
+        "total": 106.25,
+        "averagePerExecution": 0.085,
+        "dailyAverage": 15.18
+      },
+      "agents": [
+        {
+          "agentId": "customer-support-specialist",
+          "executions": 850,
+          "successRate": 0.97,
+          "averageResponseTime": 32.1
+        },
+        {
+          "agentId": "technical-triage-agent",
+          "executions": 400,
+          "successRate": 0.94,
+          "averageResponseTime": 58.7
+        }
+      ]
+    },
+    "timeline": [
+      {
+        "timestamp": "2024-01-15T08:00:00Z",
+        "executions": 25,
+        "successRate": 0.96,
+        "averageResponseTime": 44.2
+      }
+    ]
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "requestId": "req_123456789",
+    "version": "1.0"
+  }
+}
+```
+
+## Test Pack Configuration
+
+Test pack configuration before deployment.
+
+```http
+POST /packs/{packId}/test
+```
+
+### Request Body
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| testScenario | string | Yes | Test scenario name |
+| input | object | Yes | Test input data |
+| expectedOutput | object | No | Expected output for validation |
+
+### Example Request
+
+```bash
+curl -X POST "https://api.aiworkforce.com/v1/packs/pack_abc123/test" \
+  -H "Authorization: Bearer your_api_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "testScenario": "customer-inquiry",
+    "input": {
+      "customerId": "cust_123",
+      "message": "Where is my order?",
+      "priority": "medium"
+    },
+    "expectedOutput": {
+      "responseType": "order-status",
+      "includesOrderDetails": true
+    }
+  }'
+```
+
+### Example Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "testId": "test_def456",
+    "scenario": "customer-inquiry",
+    "status": "passed",
+    "result": {
+      "response": "Your order #12345 is currently in transit...",
+      "responseType": "order-status",
+      "includesOrderDetails": true,
+      "confidence": 0.94
+    },
+    "performance": {
+      "executionTime": 42.3,
+      "tokensUsed": 156,
+      "cost": 0.00234
+    },
+    "agentExecution": [
+      {
+        "agentId": "customer-support-specialist",
+        "startTime": "2024-01-15T10:30:00Z",
+        "endTime": "2024-01-15T10:30:42Z",
+        "handoff": false
+      }
+    ],
+    "validation": {
+      "expectedOutputMatch": true,
+      "qualityScore": 0.91,
+      "issues": []
+    }
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "requestId": "req_123456789",
+    "version": "1.0"
+  }
+}
+```
+
+## Error Codes
+
+| Code | Description | Resolution |
+|------|-------------|------------|
+| PACK_NOT_FOUND | Pack with specified ID not found | Verify pack ID is correct |
+| INVALID_CONFIGURATION | Invalid pack configuration | Check configuration parameters |
+| DEPLOYMENT_FAILED | Pack deployment failed | Check deployment settings and logs |
+| PACK_ALREADY_DEPLOYED | Pack is already deployed | Use update instead of deploy |
+| INSUFFICIENT_PERMISSIONS | Insufficient permissions for operation | Check user permissions |
+
+<Note>
+  **Pro Tip**: Always test pack configurations before deploying to production to ensure agents work together effectively.
+</Note>
