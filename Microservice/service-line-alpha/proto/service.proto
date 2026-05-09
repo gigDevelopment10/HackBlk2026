@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package serviceline;
+
+// ─────────────────────────────────────────────
+// MESSAGES — shared data structures used across
+// all services in the distributed system
+// ─────────────────────────────────────────────
+
+// TaskRequest — sent by a client or orchestrator to trigger work on a service
+message TaskRequest {
+  string task_id = 1;               // Unique ID for this task (used for tracing)
+  string domain = 2;                // Target service domain: advisory | marketing | technology | engineering
+  string operation = 3;             // The specific action to run e.g. market_research, code_review
+  map<string, string> parameters = 4; // Key-value input parameters for the operation
+  int64 priority = 5;               // Execution priority: lower = higher priority (e.g. 1 = urgent)
+  string requester_id = 6;          // ID of the caller (client app, test suite, orchestrator)
+}
+
+// TaskResponse — returned by a service after executing a task
+message TaskResponse {
+  string task_id = 1;               // Echoes back the task_id from the request for correlation
+  bool success = 2;                 // true = task completed OK, false = failed
+  string message = 3;               // Human-readable status or error message
+  map<string, string> data = 4;     // Returned output from the operation (flexible key-value)
+  int64 timestamp = 5;              // Unix timestamp (ms) of when the response was created
+}
+
+// HealthCheck — used by the orchestrator to ping each service and confirm it is alive
+message HealthCheck {
+  string service_id = 1;            // ID of the service being checked e.g. advisory-service-01
+  string status = 2;                // Current status: "healthy" | "unhealthy" | "check"
+  int64 timestamp = 3;              // Unix timestamp (ms) of the health check
+}
+
+// ServiceRegistration — sent when a service boots up to register itself with the orchestrator
+message ServiceRegistration {
+  string service_id = 1;            // Unique service identifier e.g. marketing-service-01
+  string domain = 2;                // Domain this service handles e.g. marketing
+  string endpoint = 3;              // Host:port where this service is reachable e.g. localhost:6002
+  repeated string capabilities = 4; // List of operations this service supports
+}
+
+// ─────────────────────────────────────────────
+// SERVICES — gRPC service definitions
+// Each block defines the remote methods exposed
+// ─────────────────────────────────────────────
+
+// ServiceLine — implemented by each domain server (Advisory, Marketing, Technology, Engineering)
+service ServiceLine {
+  rpc ExecuteTask(TaskRequest) returns (TaskResponse);           // Run a domain operation and return the result
+  rpc HealthCheck(HealthCheck) returns (HealthCheck);           // Respond to a liveness ping from the orchestrator
+  rpc RegisterService(ServiceRegistration) returns (TaskResponse); // Register this service in the orchestrator's registry
+}
+
+// DataSource — interface for reading and writing to the shared common data store
+service DataSource {
+  rpc GetData(TaskRequest) returns (TaskResponse);   // Fetch data by key from the shared store
+  rpc StoreData(TaskRequest) returns (TaskResponse); // Write/update data in the shared store
+  rpc SyncData(TaskRequest) returns (TaskResponse);  // Sync entire data store snapshot (used for replication)
+}
+
+// Orchestrator — the central coordinator; routes tasks to the right domain service
+service Orchestrator {
+  rpc DistributeTask(TaskRequest) returns (TaskResponse);    // Forward a task to the correct domain service based on domain field
+  rpc GetServiceList(TaskRequest) returns (TaskResponse);    // Return all currently registered services and their status
+  rpc MonitorServices(TaskRequest) returns (TaskResponse);   // Run health checks across all registered services
+}

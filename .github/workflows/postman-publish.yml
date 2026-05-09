@@ -1,0 +1,59 @@
+name: Publish changes to Postman
+on:
+  push:
+    branches:
+      - main  # Trigger sync when code is merged to main
+jobs:
+  publish-backend:
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.modified, 'Backend/') || contains(github.event.head_commit.added, 'Backend/')
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install Postman CLI
+        run: |
+          curl -o- "https://dl-cli.pstmn.io/install/unix.sh" | sh
+      - name: Verify Postman CLI version
+        run: postman --version
+      - name: Login to Postman
+        run: postman login --with-api-key ${{ secrets.POSTMAN_API_KEY }}
+      - name: Publish Backend changes to Cloud
+        run: |
+          cd Backend
+          postman workspace push -y --collections-dir ./postman/collections --environments-dir ./postman/environments
+
+  publish-frontend:
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.modified, 'Frontend/') || contains(github.event.head_commit.added, 'Frontend/')
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install Postman CLI
+        run: |
+          curl -o- "https://dl-cli.pstmn.io/install/unix.sh" | sh
+      - name: Verify Postman CLI version
+        run: postman --version
+      - name: Login to Postman
+        run: postman login --with-api-key ${{ secrets.POSTMAN_API_KEY }}
+      - name: Publish Frontend changes to Cloud
+        run: |
+          cd Frontend
+          postman workspace push -y --collections-dir ./postman/collections --environments-dir ./postman/environments
+
+  publish-ai:
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.modified, 'AI/') || contains(github.event.head_commit.added, 'AI/')
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install Postman CLI
+        run: |
+          curl -o- "https://dl-cli.pstmn.io/install/unix.sh" | sh
+      - name: Verify Postman CLI version
+        run: postman --version
+      - name: Login to Postman
+        run: postman login --with-api-key ${{ secrets.POSTMAN_API_KEY }}
+      - name: Publish AI changes to Cloud
+        run: |
+          cd AI
+          postman workspace push -y --collections-dir ./postman/collections --environments-dir ./postman/environments
